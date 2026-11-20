@@ -1,0 +1,802 @@
+// DEMO DATA — fictional incidents and news coverage. Not real government information.
+import type {
+  Category,
+  Incident,
+  IncidentStatus,
+  NewsArticle,
+  Priority,
+  VerificationStatus,
+} from "@/types";
+import { LOCATIONS, NEWSPAPERS, demoDate, departmentName } from "./reference";
+
+interface Seed {
+  n: number;
+  title: string;
+  cat: Category;
+  pri: Priority;
+  loc: keyof typeof LOCATIONS;
+  ago: number;
+  dept: string;
+  status: IncidentStatus;
+  ver: VerificationStatus;
+  conf: number;
+  desc: string;
+  ai: string;
+  headlines: string[];
+  related?: number[];
+  hist?: string;
+}
+
+const SEEDS: Seed[] = [
+  {
+    n: 1001,
+    title: "Kollidam Kadu embankment breach floods low-lying fields",
+    cat: "flood",
+    pri: "critical",
+    loc: "L5",
+    ago: 2,
+    dept: "wrd",
+    status: "action_assigned",
+    ver: "verified",
+    conf: 0.93,
+    desc: "A 40-metre section of the river embankment near Kollidam Kadu gave way after sustained inflow, inundating an estimated 120 acres of standing paddy and isolating two hamlets.",
+    ai: "Multiple outlets report an embankment breach near Kollidam Kadu with field inundation and two hamlets cut off. Coverage consistently cites the WRD as responding.",
+    headlines: [
+      "Embankment breach near Kollidam Kadu inundates paddy fields",
+      "Two hamlets cut off as river bund gives way",
+      "WRD rushes sandbags to plug breach at Kollidam Kadu",
+      "Farmers count losses after Kollidam Kadu bund breach",
+    ],
+    related: [1013, 1029],
+    hist: "A similar seepage at this stretch was recorded in the 2024 northeast monsoon (demo history).",
+  },
+  {
+    n: 1002,
+    title: "Waterlogging in Puthur Colony after overnight rain",
+    cat: "flood",
+    pri: "high",
+    loc: "L10",
+    ago: 3,
+    dept: "municipal",
+    status: "under_investigation",
+    ver: "ai_extracted",
+    conf: 0.86,
+    desc: "Residents report knee-deep water in streets and entry into ground-floor homes following overnight rainfall. Storm water drains appear blocked.",
+    ai: "Three reports describe waterlogging in Puthur Colony attributed to blocked storm water drains. Residents request pumping and desilting.",
+    headlines: [
+      "Puthur Colony residents wade through knee-deep water",
+      "Blocked drains blamed for Puthur Colony flooding",
+      "Civic body deploys pumps in Puthur Colony",
+    ],
+  },
+  {
+    n: 1003,
+    title: "Culvert collapse cuts off Siruvalur–Kalpatti road",
+    cat: "infrastructure",
+    pri: "high",
+    loc: "L6",
+    ago: 5,
+    dept: "pwd",
+    status: "action_assigned",
+    ver: "verified",
+    conf: 0.9,
+    desc: "A culvert on the Siruvalur–Kalpatti road collapsed, forcing a 9 km detour for buses and school vehicles.",
+    ai: "Reports agree that the culvert collapse has severed the main link road; a temporary diversion is in place and PWD has begun assessment.",
+    headlines: [
+      "Culvert caves in on Siruvalur–Kalpatti road",
+      "Buses take 9 km detour after culvert collapse",
+      "PWD begins temporary bridge work at Siruvalur",
+    ],
+  },
+  {
+    n: 1004,
+    title: "Rise in dengue cases reported in Arasur block",
+    cat: "health",
+    pri: "critical",
+    loc: "L2",
+    ago: 4,
+    dept: "health",
+    status: "under_investigation",
+    ver: "verified",
+    conf: 0.88,
+    desc: "Local reports cite an increase in fever cases with several dengue-positive results at the Arasur government hospital over one week.",
+    ai: "Coverage indicates a cluster of dengue cases in Arasur block. Reports mention fogging drives and source-reduction campaigns being initiated.",
+    headlines: [
+      "Dengue cases climb in Arasur block",
+      "Fever ward at Arasur hospital sees rush",
+      "Health teams step up fogging in Arasur",
+    ],
+    related: [1031],
+  },
+  {
+    n: 1005,
+    title: "Paddy crop damage reported in Kalpatti after heavy rain",
+    cat: "agriculture",
+    pri: "high",
+    loc: "L1",
+    ago: 2,
+    dept: "agri",
+    status: "new",
+    ver: "ai_extracted",
+    conf: 0.81,
+    desc: "Farmers report lodging and submergence of samba paddy across several revenue villages in Kalpatti taluk.",
+    ai: "Two reports describe rain-related paddy damage in Kalpatti; extent is not yet quantified by officials in the coverage.",
+    headlines: [
+      "Samba paddy submerged in Kalpatti villages",
+      "Kalpatti farmers seek crop loss enumeration",
+    ],
+    related: [1001],
+  },
+  {
+    n: 1006,
+    title: "Drinking water supply disrupted in Melpettai",
+    cat: "grievance",
+    pri: "high",
+    loc: "L7",
+    ago: 6,
+    dept: "rural",
+    status: "action_assigned",
+    ver: "verified",
+    conf: 0.84,
+    desc: "Piped drinking water supply to Melpettai has been irregular for five days due to a damaged main line.",
+    ai: "Residents report five days of disrupted supply; tanker supply is mentioned as interim relief.",
+    headlines: [
+      "Melpettai goes without piped water for five days",
+      "Tankers deployed as Melpettai pipeline repaired",
+    ],
+    related: [1031],
+  },
+  {
+    n: 1007,
+    title: "Roof leakage at Government High School, Annur Pudur",
+    cat: "education",
+    pri: "medium",
+    loc: "L8",
+    ago: 8,
+    dept: "edu",
+    status: "action_assigned",
+    ver: "verified",
+    conf: 0.87,
+    desc: "Classrooms in the older block of the school were vacated after water seepage through the roof during rains.",
+    ai: "Reports note classrooms shifted due to roof leakage; parents request structural inspection.",
+    headlines: [
+      "Leaking roof forces classes out at Annur Pudur school",
+      "Parents demand inspection of Annur Pudur school block",
+    ],
+  },
+  {
+    n: 1008,
+    title: "Orange alert for heavy rainfall issued for the district",
+    cat: "weather",
+    pri: "high",
+    loc: "L0",
+    ago: 1,
+    dept: "revenue",
+    status: "under_investigation",
+    ver: "verified",
+    conf: 0.95,
+    desc: "An orange alert for heavy to very heavy rainfall over the next 48 hours was reported across all taluks.",
+    ai: "Coverage of a heavy rainfall orange alert; reports mention control room activation and relief centre readiness.",
+    headlines: [
+      "Orange alert: heavy rain likely over next two days",
+      "District control room activated ahead of heavy rain",
+      "Relief centres readied as rain alert issued",
+    ],
+  },
+  {
+    n: 1009,
+    title: "Urea shortage complaints at Thenmalai cooperative society",
+    cat: "agriculture",
+    pri: "medium",
+    loc: "L4",
+    ago: 9,
+    dept: "agri",
+    status: "under_investigation",
+    ver: "needs_review",
+    conf: 0.72,
+    desc: "Farmers allege limited availability of urea at the primary agricultural cooperative society during the samba season.",
+    ai: "Two reports describe urea availability complaints. Stock figures are not cited — requires verification with the department.",
+    headlines: [
+      "Farmers queue for urea at Thenmalai cooperative",
+      "Urea supply falls short, say Thenmalai farmers",
+    ],
+  },
+  {
+    n: 1010,
+    title: "Streetlights non-functional on bypass road stretch",
+    cat: "grievance",
+    pri: "low",
+    loc: "U2",
+    ago: 12,
+    dept: "municipal",
+    status: "new",
+    ver: "ai_extracted",
+    conf: 0.64,
+    desc: "Motorists complain of dark stretches along the bypass. The exact stretch is not specified in the source.",
+    ai: "Single report; location could not be resolved to a specific point.",
+    headlines: ["Dark stretches on bypass worry motorists"],
+  },
+  {
+    n: 1011,
+    title: "Fever cases among students at Vadakku Kulam hostel",
+    cat: "health",
+    pri: "high",
+    loc: "L9",
+    ago: 7,
+    dept: "health",
+    status: "resolved",
+    ver: "verified",
+    conf: 0.85,
+    desc: "Around 18 students at a government hostel reported fever; medical camp conducted and water samples tested.",
+    ai: "Reports describe a fever outbreak at a hostel, a medical camp, and subsequent recovery of students.",
+    headlines: [
+      "18 hostel students down with fever at Vadakku Kulam",
+      "Medical camp held at Vadakku Kulam hostel",
+    ],
+  },
+  {
+    n: 1012,
+    title: "Damaged stretch on Arasur–Karaiyur road",
+    cat: "infrastructure",
+    pri: "medium",
+    loc: "L11",
+    ago: 14,
+    dept: "pwd",
+    status: "action_assigned",
+    ver: "verified",
+    conf: 0.82,
+    desc: "A 3 km stretch has developed potholes, reportedly causing two-wheeler accidents.",
+    ai: "Reports cite poor road condition and accidents; residents demand relaying before monsoon peak.",
+    headlines: [
+      "Potholes turn Arasur–Karaiyur road into a hazard",
+      "Two-wheeler riders injured on damaged Karaiyur road",
+    ],
+  },
+  {
+    n: 1013,
+    title: "Seepage observed in Vadakku Kulam tank bund",
+    cat: "flood",
+    pri: "high",
+    loc: "L9",
+    ago: 3,
+    dept: "wrd",
+    status: "under_investigation",
+    ver: "needs_review",
+    conf: 0.77,
+    desc: "Villagers report seepage on the downstream face of the irrigation tank bund as the tank nears full capacity.",
+    ai: "Two reports describe seepage; severity is uncertain and needs engineering assessment.",
+    headlines: [
+      "Seepage in Vadakku Kulam tank bund alarms villagers",
+      "Officials inspect Vadakku Kulam tank as water level rises",
+    ],
+    related: [1001],
+  },
+  {
+    n: 1014,
+    title: "Prolonged power outages in Ponnagaram villages",
+    cat: "infrastructure",
+    pri: "medium",
+    loc: "L3",
+    ago: 10,
+    dept: "power",
+    status: "resolved",
+    ver: "verified",
+    conf: 0.83,
+    desc: "Several villages experienced outages exceeding 12 hours after a transformer failure.",
+    ai: "Reports cover a transformer failure and its restoration after 14 hours.",
+    headlines: [
+      "Ponnagaram villages in dark for 12 hours",
+      "Power restored after transformer replaced in Ponnagaram",
+    ],
+  },
+  {
+    n: 1015,
+    title: "Banana plantations damaged by gusty winds",
+    cat: "agriculture",
+    pri: "medium",
+    loc: "L3",
+    ago: 16,
+    dept: "agri",
+    status: "closed",
+    ver: "verified",
+    conf: 0.8,
+    desc: "Gusty winds damaged banana plantations in parts of Ponnagaram taluk.",
+    ai: "Single report on wind damage to banana crops; enumeration completed per follow-up.",
+    headlines: ["Gusty winds flatten banana plantations in Ponnagaram"],
+  },
+  {
+    n: 1016,
+    title: "Teacher vacancies affecting classes in Thenmalai schools",
+    cat: "education",
+    pri: "medium",
+    loc: "L4",
+    ago: 18,
+    dept: "edu",
+    status: "under_investigation",
+    ver: "ai_extracted",
+    conf: 0.7,
+    desc: "Parents report that several subjects lack teachers in two high schools in Thenmalai.",
+    ai: "Reports suggest teacher vacancies; vacancy numbers differ between sources.",
+    headlines: [
+      "Thenmalai schools short of subject teachers",
+      "Parents raise teacher shortage at Thenmalai",
+    ],
+  },
+  {
+    n: 1017,
+    title: "Overflowing drainage near Vellanadu bus stand",
+    cat: "grievance",
+    pri: "medium",
+    loc: "L0",
+    ago: 11,
+    dept: "municipal",
+    status: "action_assigned",
+    ver: "verified",
+    conf: 0.84,
+    desc: "Sewage overflow near the central bus stand is causing hygiene concerns for commuters and traders.",
+    ai: "Reports describe repeated drainage overflow; traders cite it as a recurring problem.",
+    headlines: [
+      "Sewage overflow near Vellanadu bus stand irks commuters",
+      "Traders seek permanent fix for bus stand drainage",
+    ],
+  },
+  {
+    n: 1018,
+    title: "Thunderstorm uproots trees and blocks roads in Kalpatti",
+    cat: "weather",
+    pri: "medium",
+    loc: "L1",
+    ago: 20,
+    dept: "revenue",
+    status: "resolved",
+    ver: "verified",
+    conf: 0.88,
+    desc: "A thunderstorm uprooted over 30 trees, temporarily blocking roads and damaging power lines.",
+    ai: "Reports cover tree falls and clearance operations completed within a day.",
+    headlines: ["Thunderstorm uproots trees across Kalpatti", "Roads cleared after Kalpatti storm"],
+  },
+  {
+    n: 1019,
+    title: "Staff shortage at Melpettai Primary Health Centre",
+    cat: "health",
+    pri: "medium",
+    loc: "L7",
+    ago: 22,
+    dept: "health",
+    status: "under_investigation",
+    ver: "ai_extracted",
+    conf: 0.69,
+    desc: "Patients report long waits due to vacant medical officer and nurse posts at the PHC.",
+    ai: "Single report; staffing figures not independently confirmed.",
+    headlines: ["Melpettai PHC struggles with staff vacancies"],
+  },
+  {
+    n: 1020,
+    title: "Crop insurance claim delays raised at grievance day",
+    cat: "agriculture",
+    pri: "medium",
+    loc: "U1",
+    ago: 13,
+    dept: "agri",
+    status: "new",
+    ver: "needs_review",
+    conf: 0.66,
+    desc: "Farmers from eastern villages raised delays in crop insurance settlement. Specific villages were not named.",
+    ai: "Two reports mention claim delays; affected villages are unspecified, so the location is unresolved.",
+    headlines: [
+      "Farmers flag crop insurance delays at grievance meet",
+      "Insurance payouts pending for eastern villages, say farmers",
+    ],
+  },
+  {
+    n: 1021,
+    title: "Bridge approach road damaged near old canal",
+    cat: "infrastructure",
+    pri: "high",
+    loc: "U0",
+    ago: 4,
+    dept: "pwd",
+    status: "new",
+    ver: "ai_extracted",
+    conf: 0.71,
+    desc: "Erosion has damaged the approach road to a small bridge near the old canal. The bridge is not named in coverage.",
+    ai: "Reports mention erosion at a bridge approach; exact location could not be resolved.",
+    headlines: [
+      "Erosion eats into bridge approach near old canal",
+      "Motorists warned of damaged canal bridge approach",
+    ],
+  },
+  {
+    n: 1022,
+    title: "Railway underpass flooded in Vellanadu Town",
+    cat: "flood",
+    pri: "high",
+    loc: "L0",
+    ago: 1,
+    dept: "municipal",
+    status: "action_assigned",
+    ver: "verified",
+    conf: 0.9,
+    desc: "The railway underpass was flooded to a depth of about 4 feet, halting traffic for several hours.",
+    ai: "Three reports confirm underpass flooding and traffic diversion; pumping operations are mentioned.",
+    headlines: [
+      "Vellanadu underpass under four feet of water",
+      "Traffic diverted as underpass floods",
+      "Motor pumps deployed at Vellanadu subway",
+    ],
+  },
+  {
+    n: 1023,
+    title: "Mid-day meal quality complaint at Siruvalur school",
+    cat: "education",
+    pri: "high",
+    loc: "L6",
+    ago: 6,
+    dept: "edu",
+    status: "under_investigation",
+    ver: "needs_review",
+    conf: 0.74,
+    desc: "Parents complained about food quality served under the mid-day meal scheme; samples reportedly collected.",
+    ai: "Two reports; allegations not yet confirmed by inspection results.",
+    headlines: [
+      "Parents protest mid-day meal quality at Siruvalur",
+      "Food samples collected at Siruvalur school",
+    ],
+  },
+  {
+    n: 1024,
+    title: "Encroachment on irrigation channel at Karaiyur",
+    cat: "grievance",
+    pri: "low",
+    loc: "L11",
+    ago: 24,
+    dept: "revenue",
+    status: "under_investigation",
+    ver: "ai_extracted",
+    conf: 0.68,
+    desc: "Farmers allege that encroachments are obstructing flow in a supply channel.",
+    ai: "Single report of alleged encroachment; requires survey verification.",
+    headlines: ["Encroachments choke Karaiyur supply channel, say farmers"],
+  },
+  {
+    n: 1025,
+    title: "Unusually high daytime temperatures in early October",
+    cat: "weather",
+    pri: "low",
+    loc: "L0",
+    ago: 28,
+    dept: "revenue",
+    status: "closed",
+    ver: "verified",
+    conf: 0.82,
+    desc: "Daytime temperatures were reported 2–3°C above normal for several days before monsoon onset.",
+    ai: "Single report on elevated temperatures; no health impact cited.",
+    headlines: ["Mercury stays high ahead of monsoon onset"],
+  },
+  {
+    n: 1026,
+    title: "Increase in stray dog bite cases in Puthur Colony",
+    cat: "health",
+    pri: "medium",
+    loc: "L10",
+    ago: 15,
+    dept: "municipal",
+    status: "action_assigned",
+    ver: "ai_extracted",
+    conf: 0.73,
+    desc: "Residents report multiple dog-bite incidents over two weeks.",
+    ai: "Two reports; hospital figures are cited by one outlet only.",
+    headlines: [
+      "Dog bite cases rise in Puthur Colony",
+      "Residents seek ABC drive in Puthur Colony",
+    ],
+  },
+  {
+    n: 1027,
+    title: "Paddy procurement delays at Annur Pudur centre",
+    cat: "agriculture",
+    pri: "high",
+    loc: "L8",
+    ago: 5,
+    dept: "agri",
+    status: "action_assigned",
+    ver: "verified",
+    conf: 0.86,
+    desc: "Farmers report harvested paddy waiting several days at the direct procurement centre amid rain threat.",
+    ai: "Three reports describe procurement backlog with rain-damage risk to stored paddy.",
+    headlines: [
+      "Harvested paddy piles up at Annur Pudur procurement centre",
+      "Rain threat worries farmers waiting at procurement centre",
+      "Additional procurement staff sent to Annur Pudur",
+    ],
+  },
+  {
+    n: 1028,
+    title: "Low-lying houses inundated at Karaiyur",
+    cat: "flood",
+    pri: "critical",
+    loc: "L11",
+    ago: 1,
+    dept: "revenue",
+    status: "new",
+    ver: "ai_extracted",
+    conf: 0.84,
+    desc: "About 60 houses in low-lying areas of Karaiyur reported water entry; families moved to a relief centre.",
+    ai: "Three reports describe house inundation and relocation to a relief centre. Counts vary (55–65 houses) across sources.",
+    headlines: [
+      "Water enters 60 houses in Karaiyur",
+      "Karaiyur families shifted to relief centre",
+      "Relief materials distributed at Karaiyur",
+    ],
+    related: [1022],
+  },
+  {
+    n: 1029,
+    title: "Unverified social media claim of dam breach",
+    cat: "flood",
+    pri: "low",
+    loc: "L5",
+    ago: 3,
+    dept: "wrd",
+    status: "closed",
+    ver: "rejected",
+    conf: 0.38,
+    desc: "A report referenced a social media claim of a dam breach. Officials denied the claim.",
+    ai: "Rejected after review: the claim conflicted with official statements in other coverage.",
+    headlines: ["Officials deny rumours of dam breach"],
+  },
+  {
+    n: 1030,
+    title: "Road widening causes congestion at Thenmalai junction",
+    cat: "infrastructure",
+    pri: "low",
+    loc: "L4",
+    ago: 26,
+    dept: "pwd",
+    status: "resolved",
+    ver: "verified",
+    conf: 0.79,
+    desc: "Ongoing road widening caused peak-hour congestion; traffic regulation introduced.",
+    ai: "Single report; congestion eased after traffic regulation per follow-up.",
+    headlines: ["Road widening slows traffic at Thenmalai junction"],
+  },
+  {
+    n: 1031,
+    title: "Diarrhoea cases linked to contaminated water at Melpettai",
+    cat: "health",
+    pri: "critical",
+    loc: "L7",
+    ago: 2,
+    dept: "health",
+    status: "under_investigation",
+    ver: "verified",
+    conf: 0.87,
+    desc: "Around 25 residents were treated for diarrhoea; contamination of a damaged pipeline is suspected.",
+    ai: "Three reports connect diarrhoea cases to suspected pipeline contamination following the supply disruption.",
+    headlines: [
+      "25 treated for diarrhoea in Melpettai",
+      "Contaminated water suspected in Melpettai illness",
+      "Medical camp, chlorination drive at Melpettai",
+    ],
+    related: [1006, 1004],
+  },
+  {
+    n: 1032,
+    title: "Thunderstorm warning for Thenmalai and Kalpatti",
+    cat: "weather",
+    pri: "medium",
+    loc: "L4",
+    ago: 0,
+    dept: "revenue",
+    status: "new",
+    ver: "ai_extracted",
+    conf: 0.9,
+    desc: "Coverage reports a thunderstorm and lightning warning for northern taluks for the next 24 hours.",
+    ai: "Single report relaying a thunderstorm warning; cross-check with the weather source.",
+    headlines: ["Thunderstorm, lightning likely in northern taluks"],
+  },
+];
+
+const STANDALONE: {
+  h: string;
+  cat: Category;
+  loc: keyof typeof LOCATIONS;
+  ago: number;
+  status: NewsArticle["processingStatus"];
+  s: string;
+  pri: Priority;
+}[] = [
+  {
+    h: "District administration reviews northeast monsoon preparedness",
+    cat: "weather",
+    loc: "L0",
+    ago: 9,
+    status: "processed",
+    pri: "medium",
+    s: "Review meeting covered relief centres, desilting and control room readiness.",
+  },
+  {
+    h: "New PHC building inaugurated at Ponnagaram",
+    cat: "health",
+    loc: "L3",
+    ago: 17,
+    status: "processed",
+    pri: "low",
+    s: "A new primary health centre building was opened to the public.",
+  },
+  {
+    h: "Farmers' grievance day draws 140 petitions",
+    cat: "agriculture",
+    loc: "L0",
+    ago: 13,
+    status: "processed",
+    pri: "medium",
+    s: "Petitions focused on crop insurance, input supply and irrigation.",
+  },
+  {
+    h: "Smart classroom project expands to 24 schools",
+    cat: "education",
+    loc: "L0",
+    ago: 21,
+    status: "processed",
+    pri: "low",
+    s: "Digital classrooms extended to additional government schools.",
+  },
+  {
+    h: "Tender floated for ring road resurfacing",
+    cat: "infrastructure",
+    loc: "L0",
+    ago: 1,
+    status: "pending",
+    pri: "low",
+    s: "Awaiting AI processing.",
+  },
+  {
+    h: "Residents petition for new bus route to Thenmalai",
+    cat: "grievance",
+    loc: "L4",
+    ago: 0,
+    status: "pending",
+    pri: "low",
+    s: "Awaiting AI processing.",
+  },
+  {
+    h: "Weekly market report: vegetable prices",
+    cat: "agriculture",
+    loc: "L0",
+    ago: 6,
+    status: "failed",
+    pri: "low",
+    s: "Article text could not be extracted (access restricted).",
+  },
+  {
+    h: "Desilting of water bodies reaches 80% completion",
+    cat: "flood",
+    loc: "L5",
+    ago: 19,
+    status: "processed",
+    pri: "medium",
+    s: "Desilting works across tanks and channels reported to be largely complete.",
+  },
+];
+
+const id = (n: number) => `INC-2026-${n}`;
+
+function buildHistory(s: Seed) {
+  const h = [
+    {
+      date: demoDate(s.ago, 8, 15),
+      actor: "AI Extraction Engine",
+      event: `Incident extracted from ${s.headlines.length} news report(s)`,
+    },
+  ];
+  if (s.headlines.length > 1)
+    h.push({
+      date: demoDate(s.ago, 8, 20),
+      actor: "Duplicate Detection",
+      event: `${s.headlines.length} articles grouped as one incident`,
+    });
+  if (s.ver === "verified")
+    h.push({ date: demoDate(s.ago, 11), actor: "Collector's Office", event: "Marked as verified" });
+  if (s.ver === "needs_review")
+    h.push({
+      date: demoDate(s.ago, 11),
+      actor: "Collector's Office",
+      event: "Flagged: needs review",
+    });
+  if (s.ver === "rejected")
+    h.push({
+      date: demoDate(s.ago, 11),
+      actor: "Collector's Office",
+      event: "Rejected — conflicting official statements",
+    });
+  if (["action_assigned", "resolved", "closed"].includes(s.status) && s.ver !== "rejected")
+    h.push({
+      date: demoDate(Math.max(s.ago - 1, 0), 12),
+      actor: "Collector's Office",
+      event: `Assigned to ${departmentName(s.dept)}`,
+    });
+  if (s.status === "resolved" || s.status === "closed")
+    h.push({
+      date: demoDate(Math.max(s.ago - 3, 0), 16),
+      actor: departmentName(s.dept),
+      event: "Reported resolved",
+    });
+  return h;
+}
+
+let cache: { incidents: Incident[]; articles: NewsArticle[] } | null = null;
+
+/** Lazily builds demo incidents + articles (no module-scope side effects). Returns fresh mutable copies once. */
+export function buildIncidentData() {
+  if (cache) return cache;
+  const incidents: Incident[] = [];
+  const articles: NewsArticle[] = [];
+  let a = 1;
+  SEEDS.forEach((s, idx) => {
+    const incId = id(s.n);
+    const articleIds: string[] = [];
+    s.headlines.forEach((h, j) => {
+      const aid = `ART-${String(a++).padStart(4, "0")}`;
+      articleIds.push(aid);
+      articles.push({
+        id: aid,
+        headline: h,
+        source: NEWSPAPERS[(idx + j * 2) % NEWSPAPERS.length]!,
+        publishedDate: demoDate(Math.max(s.ago - j, 0), 6 + j, 30),
+        location: LOCATIONS[s.loc]!,
+        category: s.cat,
+        priority: s.pri,
+        aiSummary:
+          j === 0
+            ? s.ai
+            : `Follow-up coverage of the same event at ${LOCATIONS[s.loc]!.name}. Grouped with ${s.headlines.length - 1} related report(s) by similarity matching.`,
+        processingStatus: j === 0 ? "processed" : "duplicate",
+        url: `https://example.com/demo-news/${aid.toLowerCase()}`,
+        incidentId: incId,
+        clusterId: s.headlines.length > 1 ? `CL-${s.n}` : undefined,
+        isDemo: true,
+      });
+    });
+    incidents.push({
+      id: incId,
+      title: s.title,
+      description: s.desc,
+      aiSummary: s.ai,
+      category: s.cat,
+      location: LOCATIONS[s.loc]!,
+      reportedDate: demoDate(s.ago, 8, 15),
+      priority: s.pri,
+      departmentId: s.dept,
+      status: s.status,
+      verification: s.ver,
+      confidence: s.conf,
+      articleIds,
+      sourceCount: new Set(articleIds.map((x) => articles.find((ar) => ar.id === x)!.source)).size,
+      relatedIncidentIds: (s.related ?? []).map(id),
+      historicalNote: s.hist,
+      history: buildHistory(s),
+      isDemo: true,
+    });
+  });
+  STANDALONE.forEach((s) => {
+    const aid = `ART-${String(a++).padStart(4, "0")}`;
+    articles.push({
+      id: aid,
+      headline: s.h,
+      source: NEWSPAPERS[a % NEWSPAPERS.length]!,
+      publishedDate: demoDate(s.ago, 7),
+      location: LOCATIONS[s.loc]!,
+      category: s.cat,
+      priority: s.pri,
+      aiSummary: s.s,
+      processingStatus: s.status,
+      url: `https://example.com/demo-news/${aid.toLowerCase()}`,
+      isDemo: true,
+    });
+  });
+  articles.sort((x, y) => y.publishedDate.localeCompare(x.publishedDate));
+  incidents.sort((x, y) => y.reportedDate.localeCompare(x.reportedDate));
+  cache = { incidents, articles };
+  return cache;
+}

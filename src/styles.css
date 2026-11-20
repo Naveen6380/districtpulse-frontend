@@ -1,0 +1,254 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * DistrictPulse AI design system.
+ * Light command-center: cool gray canvas, white cards, deep navy primary,
+ * restrained teal accent, semantic severity + category palettes.
+ * All colors are oklch.
+ */
+
+@theme inline {
+  --font-sans: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-teal: var(--teal);
+  --color-teal-soft: var(--teal-soft);
+  --color-teal-foreground: var(--teal-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+
+  --color-sev-critical: var(--sev-critical);
+  --color-sev-critical-soft: var(--sev-critical-soft);
+  --color-sev-high: var(--sev-high);
+  --color-sev-high-soft: var(--sev-high-soft);
+  --color-sev-medium: var(--sev-medium);
+  --color-sev-medium-soft: var(--sev-medium-soft);
+  --color-sev-low: var(--sev-low);
+  --color-sev-low-soft: var(--sev-low-soft);
+
+  --color-cat-flood: var(--cat-flood);
+  --color-cat-weather: var(--cat-weather);
+  --color-cat-agriculture: var(--cat-agriculture);
+  --color-cat-infrastructure: var(--cat-infrastructure);
+  --color-cat-grievance: var(--cat-grievance);
+  --color-cat-health: var(--cat-health);
+  --color-cat-education: var(--cat-education);
+
+  --cat-public_safety: oklch(0.5 0.15 25);
+  --cat-governance: oklch(0.45 0.08 255);
+  --cat-other: oklch(0.62 0.02 250);
+
+  --color-ai: var(--ai);
+  --color-ai-soft: var(--ai-soft);
+  --color-demo: var(--demo);
+  --color-demo-soft: var(--demo-soft);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-muted: var(--sidebar-muted);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+}
+
+:root {
+  --radius: 0.625rem;
+
+  --background: oklch(0.975 0.004 247);
+  --foreground: oklch(0.24 0.045 262);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.045 262);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.24 0.045 262);
+
+  --primary: oklch(0.34 0.1 262);
+  --primary-foreground: oklch(0.985 0.004 250);
+  --primary-soft: oklch(0.94 0.025 258);
+
+  --secondary: oklch(0.955 0.008 250);
+  --secondary-foreground: oklch(0.3 0.06 262);
+  --muted: oklch(0.955 0.008 250);
+  --muted-foreground: oklch(0.5 0.03 258);
+  --accent: oklch(0.95 0.015 240);
+  --accent-foreground: oklch(0.3 0.08 262);
+
+  --teal: oklch(0.56 0.1 200);
+  --teal-soft: oklch(0.95 0.03 200);
+  --teal-foreground: oklch(0.99 0.005 200);
+
+  --destructive: oklch(0.55 0.2 27);
+  --destructive-foreground: oklch(0.985 0.004 250);
+  --success: oklch(0.55 0.12 158);
+  --success-soft: oklch(0.95 0.035 158);
+  --warning: oklch(0.62 0.14 65);
+  --warning-soft: oklch(0.96 0.04 80);
+
+  --border: oklch(0.915 0.01 252);
+  --input: oklch(0.89 0.012 252);
+  --ring: oklch(0.56 0.1 220);
+
+  --sev-critical: oklch(0.53 0.2 25);
+  --sev-critical-soft: oklch(0.95 0.03 25);
+  --sev-high: oklch(0.6 0.16 47);
+  --sev-high-soft: oklch(0.95 0.04 55);
+  --sev-medium: oklch(0.64 0.13 85);
+  --sev-medium-soft: oklch(0.96 0.045 92);
+  --sev-low: oklch(0.55 0.08 230);
+  --sev-low-soft: oklch(0.95 0.02 230);
+
+  --cat-flood: oklch(0.52 0.13 245);
+  --cat-weather: oklch(0.6 0.1 205);
+  --cat-agriculture: oklch(0.57 0.12 145);
+  --cat-infrastructure: oklch(0.55 0.05 270);
+  --cat-grievance: oklch(0.6 0.14 40);
+  --cat-health: oklch(0.56 0.17 12);
+  --cat-education: oklch(0.55 0.13 300);
+
+  --ai: oklch(0.48 0.1 210);
+  --ai-soft: oklch(0.955 0.025 210);
+  --demo: oklch(0.5 0.11 65);
+  --demo-soft: oklch(0.965 0.04 85);
+
+  --chart-1: oklch(0.38 0.1 262);
+  --chart-2: oklch(0.6 0.1 200);
+  --chart-3: oklch(0.7 0.06 240);
+  --chart-4: oklch(0.6 0.16 47);
+  --chart-5: oklch(0.55 0.12 158);
+
+  --sidebar: oklch(0.235 0.055 263);
+  --sidebar-foreground: oklch(0.88 0.02 255);
+  --sidebar-primary: oklch(0.72 0.1 200);
+  --sidebar-primary-foreground: oklch(0.2 0.05 263);
+  --sidebar-accent: oklch(0.3 0.06 263);
+  --sidebar-accent-foreground: oklch(0.98 0.005 250);
+  --sidebar-border: oklch(0.32 0.05 263);
+  --sidebar-ring: oklch(0.72 0.1 200);
+  --sidebar-muted: oklch(0.66 0.03 258);
+
+  --shadow-card: 0 1px 2px oklch(0.24 0.045 262 / 0.04), 0 1px 3px oklch(0.24 0.045 262 / 0.06);
+  --shadow-raised: 0 4px 12px -2px oklch(0.24 0.045 262 / 0.08),
+    0 2px 4px -2px oklch(0.24 0.045 262 / 0.06);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "tnum" 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+@utility surface-card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+@utility login-grid {
+  background-image:
+    linear-gradient(oklch(1 0 0 / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(1 0 0 / 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Leaflet cluster styling aligned to tokens */
+.dp-cluster {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border: 3px solid oklch(1 0 0 / 0.85);
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  box-shadow: var(--shadow-raised);
+}
+
+.dp-marker {
+  border-radius: 9999px;
+  border: 2px solid oklch(1 0 0);
+  box-shadow: 0 1px 4px oklch(0.24 0.045 262 / 0.35);
+}
+
+.leaflet-container {
+  font-family: var(--font-sans);
+}
