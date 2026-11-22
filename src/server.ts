@@ -2,6 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { proxyApiRequest } from "./lib/api-proxy";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -46,6 +47,11 @@ function isH3SwallowedErrorBody(body: string): boolean {
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    if (new URL(request.url).pathname.startsWith("/api/"))
+      return proxyApiRequest(
+        request,
+        process.env["DP_API_PROXY_TARGET"] ?? "http://127.0.0.1:8091",
+      );
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

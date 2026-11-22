@@ -531,11 +531,32 @@ export function SourcesPage() {
 
 export function ReportsPage() {
   const { districtId } = useDistrict();
+  const reportSession = useSession();
+  const reportCache = useQueryClient();
   const [type, setType] = useState<ReportType>("daily");
   const today = new Date().toISOString().slice(0, 10);
   const [from, setFrom] = useState(today),
     [to, setTo] = useState(today);
   const [report, setReport] = useState<GeneratedReport | null>(null);
+  useEffect(() => {
+    const load = () => {
+      const saved = reportCache.getQueryData<{
+        report: GeneratedReport;
+        type: ReportType;
+        from: string;
+        to: string;
+      }>(["voice-report", reportSession?.user.id, districtId]);
+      if (saved) {
+        setReport(saved.report);
+        setType(saved.type);
+        setFrom(saved.from);
+        setTo(saved.to);
+      }
+    };
+    load();
+    window.addEventListener("districtpulse:report-ready", load);
+    return () => window.removeEventListener("districtpulse:report-ready", load);
+  }, [districtId, reportSession?.user.id, reportCache]);
   const generate = useMutation({
     mutationFn: () =>
       reportService.generate(districtId, {
@@ -920,6 +941,7 @@ export function CustomDashboardPage() {
 }
 
 export function SettingsPage() {
+  const { districtId, districts } = useDistrict();
   const session = useSession();
   const [email, setEmail] = useState(""),
     [name, setName] = useState(""),
@@ -928,7 +950,8 @@ export function SettingsPage() {
     [departmentId, setDepartment] = useState("pwd");
   const depts = useDepartments();
   const create = useMutation({
-    mutationFn: () => post("/auth/users", { email, name, password, role, departmentId }),
+    mutationFn: () =>
+      post("/auth/users", { email, name, password, role, departmentId, districtId }),
     onSuccess: () => {
       toast.success("User created");
       setPassword("");
@@ -1005,6 +1028,10 @@ export function SettingsPage() {
                 ))}
               </select>
             )}
+            <p className="text-xs text-muted-foreground">
+              Assigned district: {districts.find((d) => d.id === districtId)?.name}. Select the
+              required district in the header before creating an officer.
+            </p>
             <Button disabled={create.isPending}>Create user</Button>
           </form>
         </SectionCard>

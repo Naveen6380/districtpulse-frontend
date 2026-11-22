@@ -4,6 +4,7 @@ import {
   ClipboardList,
   CloudRain,
   Database,
+  Link as LinkIcon,
   FileText,
   LayoutDashboard,
   LayoutGrid,
@@ -64,6 +65,7 @@ export const NAV_ITEMS: NavItem[] = [
     group: "Administration",
   },
   { title: "Data Sources", to: "/sources", icon: Database, roles: LEAD, group: "Workspace" },
+  { title: "Import URL", to: "/import-url", icon: LinkIcon, roles: LEAD, group: "Workspace" },
   {
     title: "Custom Dashboard",
     to: "/custom-dashboard",

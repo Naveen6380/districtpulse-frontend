@@ -16,6 +16,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedActionsRouteImport } from './routes/_authenticated/actions'
 import { Route as AuthenticatedAgricultureRouteImport } from './routes/_authenticated/agriculture'
 import { Route as AuthenticatedCustomDashboardRouteImport } from './routes/_authenticated/custom-dashboard'
+import { Route as AuthenticatedImportUrlRouteImport } from './routes/_authenticated/import-url'
 import { Route as AuthenticatedLeaveRouteImport } from './routes/_authenticated/leave'
 import { Route as AuthenticatedMapRouteImport } from './routes/_authenticated/map'
 import { Route as AuthenticatedNewsRouteImport } from './routes/_authenticated/news'
@@ -65,6 +66,11 @@ const AuthenticatedCustomDashboardRoute =
     path: '/custom-dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedImportUrlRoute = AuthenticatedImportUrlRouteImport.update({
+  id: '/import-url',
+  path: '/import-url',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedLeaveRoute = AuthenticatedLeaveRouteImport.update({
   id: '/leave',
   path: '/leave',
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/actions': typeof AuthenticatedActionsRoute
   '/agriculture': typeof AuthenticatedAgricultureRoute
   '/custom-dashboard': typeof AuthenticatedCustomDashboardRoute
+  '/import-url': typeof AuthenticatedImportUrlRoute
   '/leave': typeof AuthenticatedLeaveRoute
   '/map': typeof AuthenticatedMapRoute
   '/news': typeof AuthenticatedNewsRoute
@@ -157,6 +164,7 @@ export interface FileRoutesByTo {
   '/actions': typeof AuthenticatedActionsRoute
   '/agriculture': typeof AuthenticatedAgricultureRoute
   '/custom-dashboard': typeof AuthenticatedCustomDashboardRoute
+  '/import-url': typeof AuthenticatedImportUrlRoute
   '/leave': typeof AuthenticatedLeaveRoute
   '/map': typeof AuthenticatedMapRoute
   '/news': typeof AuthenticatedNewsRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   '/_authenticated/actions': typeof AuthenticatedActionsRoute
   '/_authenticated/agriculture': typeof AuthenticatedAgricultureRoute
   '/_authenticated/custom-dashboard': typeof AuthenticatedCustomDashboardRoute
+  '/_authenticated/import-url': typeof AuthenticatedImportUrlRoute
   '/_authenticated/leave': typeof AuthenticatedLeaveRoute
   '/_authenticated/map': typeof AuthenticatedMapRoute
   '/_authenticated/news': typeof AuthenticatedNewsRoute
@@ -201,6 +210,7 @@ export interface FileRouteTypes {
     | '/actions'
     | '/agriculture'
     | '/custom-dashboard'
+    | '/import-url'
     | '/leave'
     | '/map'
     | '/news'
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/actions'
     | '/agriculture'
     | '/custom-dashboard'
+    | '/import-url'
     | '/leave'
     | '/map'
     | '/news'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/_authenticated/actions'
     | '/_authenticated/agriculture'
     | '/_authenticated/custom-dashboard'
+    | '/_authenticated/import-url'
     | '/_authenticated/leave'
     | '/_authenticated/map'
     | '/_authenticated/news'
@@ -312,6 +324,13 @@ declare module '@tanstack/react-router' {
       path: '/custom-dashboard'
       fullPath: '/custom-dashboard'
       preLoaderRoute: typeof AuthenticatedCustomDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/import-url': {
+      id: '/_authenticated/import-url'
+      path: '/import-url'
+      fullPath: '/import-url'
+      preLoaderRoute: typeof AuthenticatedImportUrlRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/leave': {
@@ -405,6 +424,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedActionsRoute: typeof AuthenticatedActionsRoute
   AuthenticatedAgricultureRoute: typeof AuthenticatedAgricultureRoute
   AuthenticatedCustomDashboardRoute: typeof AuthenticatedCustomDashboardRoute
+  AuthenticatedImportUrlRoute: typeof AuthenticatedImportUrlRoute
   AuthenticatedLeaveRoute: typeof AuthenticatedLeaveRoute
   AuthenticatedMapRoute: typeof AuthenticatedMapRoute
   AuthenticatedNewsRoute: typeof AuthenticatedNewsRoute
@@ -423,6 +443,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActionsRoute: AuthenticatedActionsRoute,
   AuthenticatedAgricultureRoute: AuthenticatedAgricultureRoute,
   AuthenticatedCustomDashboardRoute: AuthenticatedCustomDashboardRoute,
+  AuthenticatedImportUrlRoute: AuthenticatedImportUrlRoute,
   AuthenticatedLeaveRoute: AuthenticatedLeaveRoute,
   AuthenticatedMapRoute: AuthenticatedMapRoute,
   AuthenticatedNewsRoute: AuthenticatedNewsRoute,

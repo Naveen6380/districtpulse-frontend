@@ -3,10 +3,11 @@
 // When it is not set (or VITE_USE_MOCK_API=true) the app runs on clearly labelled demo services.
 import axios, { AxiosError } from "axios";
 import { clearSession, getToken } from "../auth/session";
+import { resolveApiBaseUrl } from "./base-url";
 
-export const API_BASE_URL = (
-  (import.meta.env["VITE_API_BASE_URL"] as string | undefined) ?? "http://localhost:8081/api"
-).replace(/\/$/, "");
+export const API_BASE_URL = resolveApiBaseUrl(
+  import.meta.env["VITE_API_BASE_URL"] as string | undefined,
+);
 export const USE_MOCK_API = import.meta.env["VITE_USE_MOCK_API"] === "true";
 
 export const api = axios.create({
@@ -19,7 +20,11 @@ api.interceptors.request.use((config) => {
   const token = getToken();
   const publicRequest = ["/auth/login", "/auth/forgot-password"].includes(config.url ?? "");
   if (!token && !publicRequest) throw new axios.CanceledError("Session ended");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+    const district = window.localStorage.getItem("dp.district");
+    if (district && config.url !== "/districts") config.headers["X-District-ID"] = district;
+  }
   return config;
 });
 

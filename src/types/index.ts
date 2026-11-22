@@ -33,6 +33,7 @@ export interface AuthSession {
 export interface District {
   id: string;
   name: string;
+  tamilName?: string;
   state: string;
   isDemo: boolean;
   hasData: boolean;

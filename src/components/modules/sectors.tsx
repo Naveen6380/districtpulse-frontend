@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Activity, CloudRain, Sprout, CalendarCheck } from "lucide-react";
-import { toast } from "sonner";
 import {
   PageHeader,
   SectionCard,
@@ -13,13 +12,9 @@ import {
 import { QueryView, EmptyState } from "@/components/dp/states";
 import { LmsReferencePanel } from "./lms-reference";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useMapData, useWeather, useAgriculture, useLeave } from "@/lib/queries";
 import { useDistrict } from "@/lib/district";
-import { useSession } from "@/lib/auth";
-import { api, get, post, USE_MOCK_API } from "@/services/api/client";
+import { get, USE_MOCK_API } from "@/services/api/client";
 import { fmtDate, fmtDateTime } from "@/lib/format";
 import type { Incident } from "@/types";
 import "leaflet/dist/leaflet.css";
@@ -180,12 +175,6 @@ function DistrictMap({ incidents }: { incidents: Incident[] }) {
 
 function DatasetImport({ kind }: { kind: "weather" | "agriculture" | "leave" }) {
   const { districtId } = useDistrict();
-  const session = useSession();
-  const qc = useQueryClient();
-  const [file, setFile] = useState<File | null>(null),
-    [url, setUrl] = useState(""),
-    [date, setDate] = useState(""),
-    [authorised, setAuthorised] = useState(false);
   const meta = useQuery({
     queryKey: ["provenance", districtId, kind],
     queryFn: () =>
@@ -193,24 +182,6 @@ function DatasetImport({ kind }: { kind: "weather" | "agriculture" | "leave" }) 
         `/districts/${districtId}/datasets/${kind}/provenance`,
       ),
     enabled: !USE_MOCK_API,
-  });
-  const upload = useMutation({
-    mutationFn: async () => {
-      if (!file) throw new Error("Select an authorised JSON export");
-      if (file.size > 5 * 1024 * 1024) throw new Error("Maximum JSON size is 5MB");
-      const data = JSON.parse(await file.text());
-      return post(`/districts/${districtId}/datasets/${kind}/import`, {
-        sourceUrl: url,
-        observedAt: new Date(date).toISOString(),
-        authorised,
-        data,
-      });
-    },
-    onSuccess: () => {
-      toast.success("Dataset imported; verify its provenance");
-      void qc.invalidateQueries();
-    },
-    onError: (e: Error) => toast.error(e.message),
   });
   return (
     <SectionCard title="Source and freshness" className="mt-4">
@@ -227,56 +198,6 @@ function DatasetImport({ kind }: { kind: "weather" | "agriculture" | "leave" }) 
         >
           Original source
         </a>
-      )}
-      {session?.user.role !== "department_officer" && !USE_MOCK_API && (
-        <details className="mt-4">
-          <summary className="cursor-pointer text-sm font-medium">
-            Import authorised dataset
-          </summary>
-          <p className="my-3 text-xs text-muted-foreground">
-            Upload a JSON export using the documented API shape. Government portal access must be
-            authorised. Leave data is stored as aggregate totals only.
-          </p>
-          <form
-            className="grid max-w-xl gap-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              upload.mutate();
-            }}
-          >
-            <Label>
-              Source URL
-              <Input
-                type="url"
-                required
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://official-source.example/"
-              />
-            </Label>
-            <Label>
-              Data observed at
-              <Input
-                type="datetime-local"
-                required
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </Label>
-            <Input
-              aria-label="JSON export"
-              type="file"
-              accept=".json,application/json"
-              required
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
-            <Label className="flex gap-2">
-              <Checkbox checked={authorised} onCheckedChange={(v) => setAuthorised(!!v)} />I am
-              authorised to import this dataset.
-            </Label>
-            <Button disabled={!authorised || upload.isPending}>Import dataset</Button>
-          </form>
-        </details>
       )}
     </SectionCard>
   );

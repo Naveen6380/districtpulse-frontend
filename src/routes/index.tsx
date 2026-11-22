@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-// "/" has no page of its own: signed-in users land on Overview; the app gate sends others to /login.
+// Render the server-visible login first; its browser gate forwards existing sessions to Overview.
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -22,6 +22,6 @@ export const Route = createFileRoute("/")({
     ],
   }),
   beforeLoad: () => {
-    throw redirect({ to: "/overview" });
+    throw redirect({ to: "/login" });
   },
 });
