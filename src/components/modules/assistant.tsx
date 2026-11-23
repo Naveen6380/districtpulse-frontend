@@ -21,6 +21,7 @@ import {
 import { patch } from "@/services/api/client";
 import { monitorMicrophone } from "@/lib/microphone";
 import { reportService } from "@/services/operations.service";
+import { projectHelp } from "@/lib/project-help";
 
 type Message = { question: string; answer: AssistantAnswer };
 export function DistrictAssistant() {
@@ -41,6 +42,7 @@ function Assistant({ open, setOpen }: { open: boolean; setOpen: (value: boolean)
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const helpTopic = useRef<string | undefined>(undefined);
   const [importId, setImportId] = useState("");
   const [handsFree, setHandsFree] = useState(true);
   const [voiceEngine, setVoiceEngine] = useState("server");
@@ -308,7 +310,12 @@ function Assistant({ open, setOpen }: { open: boolean; setOpen: (value: boolean)
     setError("");
     setBusy(true);
     try {
-      if (!(await command(q))) {
+      const help = projectHelp(q, lead, helpTopic.current);
+      if (help) {
+        helpTopic.current = help.topic;
+        setMessages((m) => [...m, { question: q, answer: help }]);
+      } else if (!(await command(q))) {
+        helpTopic.current = undefined;
         const answer = await workspaceService.ask(districtId, q, scope, importId || undefined);
         if (mounted.current) setMessages((m) => [...m, { question: q, answer }]);
       }
@@ -643,9 +650,24 @@ function Assistant({ open, setOpen }: { open: boolean; setOpen: (value: boolean)
             {!messages.length && (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Ask about district data or project features. Voice: speak, review the transcript,
-                  then Send.
+                  Hi! Ask me how to use DistrictPulse, explore district data, or give a command.
+                  Type in English or Tamil, or use voice input.
                 </p>
+                <div className="flex flex-wrap gap-2">
+                  {["What can you do?", "How do I use the map?", "How do I import a URL?"].map(
+                    (example) => (
+                      <Button
+                        key={example}
+                        variant="outline"
+                        size="sm"
+                        disabled={busy}
+                        onClick={() => void send(example)}
+                      >
+                        {example}
+                      </Button>
+                    ),
+                  )}
+                </div>
                 <details className="text-xs">
                   <summary className="cursor-pointer">Voice command examples</summary>
                   <p className="mt-2">
@@ -666,20 +688,22 @@ function Assistant({ open, setOpen }: { open: boolean; setOpen: (value: boolean)
                     {n}
                   </p>
                 ))}
-                {m.answer.sources.map((s) => (
-                  <details className="rounded border p-2 text-xs" key={s.id}>
-                    <summary className="cursor-pointer">{s.title}</summary>
-                    <a
-                      className="text-primary underline"
-                      href={s.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Open source
-                    </a>
-                    <p className="mt-1 whitespace-pre-wrap">{s.quote ?? s.text}</p>
-                  </details>
-                ))}
+                {m.answer.sources
+                  .filter((s, index, all) => all.findIndex((other) => other.id === s.id) === index)
+                  .map((s) => (
+                    <details className="rounded border p-2 text-xs" key={s.id}>
+                      <summary className="cursor-pointer">{s.title}</summary>
+                      <a
+                        className="text-primary underline"
+                        href={s.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Open source
+                      </a>
+                      <p className="mt-1 whitespace-pre-wrap">{s.quote ?? s.text}</p>
+                    </details>
+                  ))}
               </article>
             ))}
           </div>
