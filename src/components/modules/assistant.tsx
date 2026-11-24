@@ -24,6 +24,9 @@ import { reportService } from "@/services/operations.service";
 import { projectHelp } from "@/lib/project-help";
 
 type Message = { question: string; answer: AssistantAnswer };
+function readableReply(text: string) {
+  return text.split(/\r?\n/).filter((line) => !/^\s*(?:source date\s*:|collected\s*:|logout|subscribe now|subscribed with another email)/i.test(line)).join("\n").trim();
+}
 export function DistrictAssistant() {
   const { districtId } = useDistrict();
   const [open, setOpen] = useState(false);
@@ -44,6 +47,11 @@ function Assistant({ open, setOpen }: { open: boolean; setOpen: (value: boolean)
   const [messages, setMessages] = useState<Message[]>([]);
   const helpTopic = useRef<string | undefined>(undefined);
   const [importId, setImportId] = useState("");
+  const savedSources = useQuery({
+    queryKey: ["assistant-sources", districtId],
+    queryFn: () => workspaceService.assistantSources(districtId),
+    enabled: open && lead,
+  });
   const [handsFree, setHandsFree] = useState(true);
   const [voiceEngine, setVoiceEngine] = useState("server");
   const [voiceStatus, setVoiceStatus] = useState("");
@@ -310,11 +318,11 @@ function Assistant({ open, setOpen }: { open: boolean; setOpen: (value: boolean)
     setError("");
     setBusy(true);
     try {
-      const help = projectHelp(q, lead, helpTopic.current);
+      const help = importId ? undefined : projectHelp(q, lead, helpTopic.current);
       if (help) {
         helpTopic.current = help.topic;
         setMessages((m) => [...m, { question: q, answer: help }]);
-      } else if (!(await command(q))) {
+      } else if (importId || !(await command(q))) {
         helpTopic.current = undefined;
         const answer = await workspaceService.ask(districtId, q, scope, importId || undefined);
         if (mounted.current) setMessages((m) => [...m, { question: q, answer }]);
@@ -543,7 +551,9 @@ function Assistant({ open, setOpen }: { open: boolean; setOpen: (value: boolean)
               <X className="size-4" />
             </Button>
           </header>
-          <div className="flex flex-wrap gap-2 border-b p-3">
+          <details className="border-b p-3">
+            <summary className="cursor-pointer text-sm font-medium">Chat and voice settings</summary>
+            <div className="mt-3 flex max-h-52 flex-wrap gap-2 overflow-auto">
             {voiceEngine === "server" && (
               <>
                 <select
@@ -645,7 +655,20 @@ function Assistant({ open, setOpen }: { open: boolean; setOpen: (value: boolean)
                 Clear source selection
               </Button>
             )}
-          </div>
+            </div>
+          </details>
+          {lead && (
+            <div className="border-b px-3 py-2">
+              <select aria-label="Chat source" className="w-full rounded border bg-background p-2 text-sm"
+                value={importId} onChange={(e) => { setImportId(e.target.value); setScope(e.target.value ? "imports" : "both"); }}>
+                <option value="">Ask about DistrictPulse or choose an imported link</option>
+                {savedSources.data?.filter((source) => source.pageCount || source.pages?.length).map((source) => (
+                  <option key={source.id} value={source.id}>{source.sourceUrl}</option>
+                ))}
+              </select>
+              {importId && <p className="mt-1 text-xs text-muted-foreground">Answers use this source’s saved content. Ask a specific question below.</p>}
+            </div>
+          )}
           <div className="min-h-28 flex-1 space-y-4 overflow-auto p-3" aria-live="polite">
             {!messages.length && (
               <>
@@ -682,7 +705,7 @@ function Assistant({ open, setOpen }: { open: boolean; setOpen: (value: boolean)
             {messages.map((m, i) => (
               <article key={i} className="space-y-2">
                 <p className="rounded bg-muted p-2 text-sm font-medium">{m.question}</p>
-                <p className="whitespace-pre-wrap break-words text-sm">{m.answer.answer}</p>
+                <p className="whitespace-pre-wrap break-words text-sm">{readableReply(m.answer.answer)}</p>
                 {m.answer.notices.map((n, j) => (
                   <p className="text-xs text-muted-foreground" key={j}>
                     {n}
@@ -701,7 +724,7 @@ function Assistant({ open, setOpen }: { open: boolean; setOpen: (value: boolean)
                       >
                         Open source
                       </a>
-                      <p className="mt-1 whitespace-pre-wrap">{s.quote ?? s.text}</p>
+                      <p className="mt-1 whitespace-pre-wrap">{readableReply(s.quote ?? s.text)}</p>
                     </details>
                   ))}
               </article>

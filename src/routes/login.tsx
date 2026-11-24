@@ -21,7 +21,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DemoBadge } from "@/components/dp/badges";
 import { login } from "@/lib/auth";
 import { getSession } from "@/services/auth/session";
-import { USE_MOCK_API } from "@/services/api/client";
+import { API_BASE_URL, USE_MOCK_API } from "@/services/api/client";
+import { waitForBackend } from "@/lib/backend-ready";
 import { ROLE_LABEL } from "@/lib/format";
 import type { Role } from "@/types";
 
@@ -72,6 +73,7 @@ function LoginPage() {
   const search = Route.useSearch();
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loginPhase, setLoginPhase] = useState<string | null>(null);
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { email: "", password: "", remember: true },
@@ -81,6 +83,11 @@ function LoginPage() {
   const onSubmit = async (v: FormValues) => {
     setError(null);
     try {
+      if (!USE_MOCK_API) {
+        setLoginPhase("Checking server…");
+        await waitForBackend(API_BASE_URL, () => setLoginPhase("Server starting… please wait (up to 4 minutes)."));
+      }
+      setLoginPhase("Signing in…");
       await login(v.email, v.password, v.remember);
       const target =
         search.redirect && search.redirect.startsWith("/") && !search.redirect.startsWith("//")
@@ -89,6 +96,8 @@ function LoginPage() {
       await navigate({ href: target, replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Sign-in failed. Please try again.");
+    } finally {
+      setLoginPhase(null);
     }
   };
 
@@ -217,8 +226,9 @@ function LoginPage() {
             )}
             <Button type="submit" className="h-10 w-full" disabled={formState.isSubmitting}>
               {formState.isSubmitting && <Loader2 className="size-4 animate-spin" />}
-              Sign in
+              {formState.isSubmitting ? "Please wait…" : "Sign in"}
             </Button>
+            {loginPhase && <p className="text-sm text-muted-foreground" role="status" aria-live="polite">{loginPhase}</p>}
           </form>
 
           {USE_MOCK_API && (

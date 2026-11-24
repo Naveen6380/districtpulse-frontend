@@ -379,6 +379,9 @@ export function AgriculturePage() {
                     Price fetch failed. Check provider access and retry; no prices were fabricated.
                   </span>
                 )}
+                {a.freshness?.includes("access_denied") && (
+                  <span className="block">data.gov.in refused access. Verify the configured API key and its permissions; requests are paused for five minutes.</span>
+                )}
                 {a.freshness === "no_records" && (
                   <span className="block">
                     The provider returned no matching valid price records for this district.

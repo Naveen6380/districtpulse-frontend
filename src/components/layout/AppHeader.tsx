@@ -3,6 +3,8 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
+  Check,
+  ChevronsUpDown,
   Building2,
   ClipboardList,
   FileText,
@@ -19,13 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,35 +60,47 @@ export function AppHeader() {
   );
 }
 
-function DistrictSelector() {
+export function DistrictSelector() {
   const { districtId, districts, setDistrictId } = useDistrict();
   const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const selected = districts.find((d) => d.id === districtId);
   return (
-    <Select
-      value={districtId}
-      onValueChange={(v) => {
-        setDistrictId(v);
-        void qc.invalidateQueries();
-      }}
-    >
-      <SelectTrigger
-        className="h-9 w-[150px] gap-1.5 bg-card text-sm sm:w-[190px]"
-        aria-label="Select district"
-      >
-        <MapPin className="size-3.5 shrink-0 text-teal" />
-        <SelectValue placeholder="District" />
-      </SelectTrigger>
-      <SelectContent align="end">
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" aria-expanded={open} aria-label="Select district"
+          className="h-9 w-[150px] gap-1.5 bg-card text-sm font-normal sm:w-[190px]">
+          <MapPin className="size-3.5 shrink-0 text-teal" />
+          <span className="flex-1 truncate text-left">{selected?.name ?? "District"}</span>
+          <ChevronsUpDown className="size-3.5 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-[min(320px,calc(100vw-24px))] p-0">
+        <Command label="Search district">
+          <CommandInput placeholder="Search district / மாவட்டம்…" aria-label="Search district" />
+          <CommandList>
+            <CommandEmpty>No matching district found.</CommandEmpty>
+            <CommandGroup>
         {districts.map((d) => (
-          <SelectItem key={d.id} value={d.id}>
-            {d.name}{" "}
-            {d.isDemo && (
-              <span className="text-muted-foreground">(demo{d.hasData ? "" : ", no data"})</span>
-            )}
-          </SelectItem>
+          <CommandItem key={d.id} value={d.id}
+            keywords={[d.name, d.tamilName ?? "", ...(d.id === "tiruchirappalli" ? ["Trichy", "Tiruchi", "திருச்சி"] : [])]}
+            onSelect={() => {
+              setDistrictId(d.id);
+              setOpen(false);
+              if (d.id !== districtId) void qc.invalidateQueries();
+            }}>
+            <Check className={cn("size-4", d.id === districtId ? "opacity-100" : "opacity-0")} />
+            <span className="min-w-0">
+              <span className="block">{d.name}{d.isDemo ? " (demo)" : ""}</span>
+              {d.tamilName && <span className="block text-xs text-muted-foreground">{d.tamilName}</span>}
+            </span>
+          </CommandItem>
         ))}
-      </SelectContent>
-    </Select>
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
 

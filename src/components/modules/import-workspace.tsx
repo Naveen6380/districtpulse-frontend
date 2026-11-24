@@ -10,6 +10,9 @@ import { workspaceService, type ImportRecord } from "@/services/workspace.servic
 import { fmtDateTime } from "@/lib/format";
 import { useSession } from "@/lib/auth";
 import { post } from "@/services/api/client";
+function readableContent(text: string) {
+  return text.split(/\r?\n/).filter(line => !/^\s*(?:source date\s*:.*|collected\s*:.*|you are logged in[.!]?|loading[.…! ]*|logout.*|subscribe now.*|subscribed with another email\??)\s*$/i.test(line)).join("\n").trim();
+}
 
 function download(data: unknown, filename: string) {
   const url = URL.createObjectURL(
@@ -30,7 +33,7 @@ function Workspace({ districtId, name }: { districtId: string; name: string }) {
   const session = useSession();
   const qc = useQueryClient();
   const [url, setUrl] = useState("");
-  const [related, setRelated] = useState(false);
+  const [related, setRelated] = useState(true);
   const [render, setRender] = useState(false);
   const capabilities = useQuery({
     queryKey: ["import-capabilities", districtId],
@@ -95,7 +98,14 @@ function Workspace({ districtId, name }: { districtId: string; name: string }) {
     onError: (e: Error) => toast.error(e.message),
   });
   const record = detail.data;
-  const pages = record?.pages?.filter(
+  const seenTitles = new Set<string>();
+  const seenContent = new Set<string>();
+  const pages = record?.pages?.map(p => ({ ...p, text: readableContent(p.text) })).filter(p => {
+    const title = p.title.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+    const content = p.text.toLowerCase().replace(/\s+/g, " ").trim();
+    if ((!content && !p.tables.length) || (content && seenContent.has(content)) || (title && seenTitles.has(title))) return false;
+    seenTitles.add(title); if (content) seenContent.add(content); return true;
+  }).filter(
     (p) =>
       (!search ||
         `${p.title} ${p.text} ${p.tables.flatMap((t) => t.rows.flat()).join(" ")}`
@@ -159,7 +169,7 @@ function Workspace({ districtId, name }: { districtId: string; name: string }) {
                   checked={related}
                   onChange={(e) => setRelated(e.target.checked)}
                 />
-                Include related pages on the same website (up to 5 pages)
+                Read linked news and pages on this website (up to 50 pages per import)
               </label>
             </div>
           </details>
@@ -323,11 +333,14 @@ function Workspace({ districtId, name }: { districtId: string; name: string }) {
                     />
                   </label>
                 </div>
-                {record.issues?.map((issue, i) => (
-                  <p key={i} role="status" className="my-2 text-sm text-destructive">
-                    {issue}
-                  </p>
-                ))}
+                {!!record.issues?.length && (
+                  <details className="my-3 rounded border p-3 text-sm text-muted-foreground">
+                    <summary className="cursor-pointer">Source reading details</summary>
+                    {record.issues.map((issue, i) => <p key={i} className="mt-2">{issue}</p>)}
+                  </details>
+                )}
+                <div role="region" aria-label="Imported information reader" tabIndex={0}
+                  className="max-h-[65vh] min-h-0 overflow-y-auto overscroll-contain pr-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
                 {pages?.map((p, i) => (
                   <article key={p.url + i} className="mb-6 border-t pt-4">
                     <h3 className="font-semibold">{p.title}</h3>
@@ -339,11 +352,6 @@ function Workspace({ districtId, name }: { districtId: string; name: string }) {
                     >
                       Original source
                     </a>
-                    <p className="my-2 text-xs text-muted-foreground">
-                      Published: {p.publishedAt || "Not stated by source"} · Collected:{" "}
-                      {fmtDateTime(p.collectedAt)}
-                      {p.lastModified ? ` · Last modified: ${p.lastModified}` : ""}
-                    </p>
                     {p.truncated && (
                       <p className="text-xs text-muted-foreground">
                         Text preview limited to 100,000 characters.
@@ -386,12 +394,14 @@ function Workspace({ districtId, name }: { districtId: string; name: string }) {
                     ))}
                     <section
                       aria-label="Source content"
-                      className="mt-4 rounded-lg bg-muted/30 p-4"
+                      className="mt-4"
                     >
                       <h4 className="text-sm font-medium">Page information</h4>
-                      <p className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap break-words text-sm">
-                        {p.text}
-                      </p>
+                      <div className="mt-3 space-y-3 break-words text-sm leading-7">
+                        {p.text.split(/\n\s*\n/).filter(Boolean).map((paragraph, index) => (
+                          <p key={index}>{paragraph}</p>
+                        ))}
+                      </div>
                     </section>
                     {!!p.links.length && (
                       <details className="mt-3">
@@ -416,10 +426,12 @@ function Workspace({ districtId, name }: { districtId: string; name: string }) {
                     )}
                   </article>
                 ))}
+                </div>
                 {["completed", "partial"].includes(record.status) && !pages?.length && (
                   <p>
-                    No pages match these filters. Pages without a publication date are excluded by
-                    the date filter.
+                    {search || after
+                      ? "No pages match these filters. Pages without a publication date are excluded by the date filter."
+                      : "No readable article content was available. This page may require JavaScript or a subscription. Try a publicly accessible article link."}
                     <Button
                       variant="outline"
                       size="sm"

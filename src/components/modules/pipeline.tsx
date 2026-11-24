@@ -12,9 +12,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { api, get, post, USE_MOCK_API } from "@/services/api/client";
+import { useDistrict } from "@/lib/district";
 
 export function PipelineControls() {
   const qc = useQueryClient();
+  const { districtId } = useDistrict();
   const [job, setJob] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -23,7 +25,7 @@ export function PipelineControls() {
     [url, setUrl] = useState(""),
     [date, setDate] = useState("");
   const start = useMutation({
-    mutationFn: (retry: boolean) => post<{ id: string }>(retry ? "/pipeline/retry" : "/pipeline"),
+    mutationFn: (mode: "district" | "retry" | "all") => post<{ id: string }>(mode === "all" ? "/pipeline/all" : mode === "retry" ? "/pipeline/retry" : "/pipeline"),
     onSuccess: (r) => {
       setJob(r.id);
       toast.success("News pipeline started");
@@ -31,11 +33,11 @@ export function PipelineControls() {
     onError: (e: Error) => toast.error(e.message),
   });
   const status = useQuery({
-    queryKey: ["pipeline", job],
-    queryFn: () => get<{ status: string; message?: string }>(`/pipeline/${job}`),
-    enabled: !!job,
+    queryKey: ["pipeline", districtId, job],
+    queryFn: () => get<{ status: string; message?: string; districts?: { district: string; collectionStatus?: string; processed?: number; pending?: number }[] }>(job ? `/pipeline/${job}` : "/pipeline/latest"),
+    enabled: !USE_MOCK_API,
     refetchInterval: (q) =>
-      ["completed", "failed", "partial"].includes(q.state.data?.status ?? "") ? false : 3000,
+      ["completed", "failed", "partial", "idle"].includes(q.state.data?.status ?? "") ? (job ? false : 15000) : 3000,
   });
   const upload = useMutation({
     mutationFn: async () => {
@@ -69,29 +71,38 @@ export function PipelineControls() {
           size="sm"
           disabled={
             start.isPending ||
-            (!!job && !["completed", "failed", "partial"].includes(status.data?.status ?? ""))
+            ["queued", "running"].includes(status.data?.status ?? "")
           }
-          onClick={() => start.mutate(false)}
+          onClick={() => start.mutate("district")}
         >
           Collect & analyse
+        </Button>
+        <Button size="sm" variant="outline" disabled={start.isPending || ["queued", "running"].includes(status.data?.status ?? "")}
+          onClick={() => start.mutate("all")}>
+          Collect all districts
         </Button>
         <Button
           size="sm"
           variant="outline"
           disabled={start.isPending}
-          onClick={() => start.mutate(true)}
+          onClick={() => start.mutate("retry")}
         >
           Retry failed
         </Button>
         <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
           Import article
         </Button>
-        {job && (
+        {status.data && status.data.status !== "idle" && (
           <Button size="sm" variant="ghost" onClick={() => void qc.invalidateQueries()}>
             {status.data?.status ?? "queued"} · Refresh data
           </Button>
         )}
       </div>
+      {status.data?.districts && <p className="text-sm text-muted-foreground" role="status">
+        Districts collected: {status.data.districts.filter((d) => d.collectionStatus === "completed").length} / 38
+        {" · "}Articles analysed: {status.data.districts.reduce((sum, d) => sum + (d.processed ?? 0), 0)}
+      </p>}
+      {status.data?.message && <p className="text-sm text-muted-foreground">{status.data.message}</p>}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>

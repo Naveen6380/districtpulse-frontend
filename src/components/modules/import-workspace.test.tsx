@@ -52,10 +52,11 @@ it("shows newly processed content without requiring a history click or expanding
   fireEvent.click(screen.getByRole("button", { name: "Process URL" }));
   await waitFor(() => expect(screen.getByText("Readable public information")).toBeVisible());
   expect(screen.getByLabelText("Source content").closest("details")).toBeNull();
+  expect(screen.queryByText(/Published:|Collected:/)).toBeNull();
   expect(services.create).toHaveBeenCalledWith(
     "pudukkottai",
     "https://publicurl.in/",
-    false,
+    true,
     false,
   );
   client.clear();

@@ -36,6 +36,7 @@ export interface AssistantAnswer {
   notices: string[];
 }
 export const workspaceService = {
+  assistantSources: (district: string) => get<ImportRecord[]>(`/districts/${district}/assistant/sources`),
   voiceCapabilities: (district: string) =>
     get<{ serverTranscription: boolean }>(`/districts/${district}/voice/capabilities`),
   transcribe: (district: string, audio: Blob, language: string) => {
