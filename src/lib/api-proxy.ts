@@ -15,17 +15,13 @@ export async function proxyApiRequest(request: Request, target: string): Promise
   const upstream = new URL(target);
   upstream.pathname = source.pathname;
   upstream.search = source.search;
-  const headers = new Headers(request.headers);
-  for (const name of [
-    "host",
-    "origin",
-    "cookie",
-    "connection",
-    "content-length",
-    "x-forwarded-host",
-    "x-forwarded-proto",
-  ])
-    headers.delete(name);
+  // The upstream is another public CDN origin. Replaying its incoming CDN-loop,
+  // Cloudflare and browser transport headers can make the second hop fail.
+  const headers = new Headers();
+  for (const name of ["authorization", "content-type", "accept", "x-district-id"]) {
+    const value = request.headers.get(name);
+    if (value) headers.set(name, value);
+  }
   let body: Uint8Array<ArrayBuffer> | undefined;
   if (request.body && request.method !== "GET" && request.method !== "HEAD") {
     const reader = request.body.getReader(),
@@ -64,7 +60,9 @@ export async function proxyApiRequest(request: Request, target: string): Promise
       statusText: response.statusText,
       headers: resultHeaders,
     });
-  } catch {
+  } catch (error) {
+    const failure = error as { name?: string; cause?: { code?: string } };
+    console.warn("API upstream connection failed", source.pathname, failure.name, failure.cause?.code);
     return Response.json(
       { message: "Backend is unavailable. Start the DistrictPulse API on its configured port." },
       { status: 502 },

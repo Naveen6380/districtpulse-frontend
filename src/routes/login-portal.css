@@ -1,0 +1,30 @@
+.portal-login {min-height:100svh;position:relative;color:#071d66;background:#c5defb url('/districtpulse-login-background-v2.png') center / cover no-repeat;display:flex;flex-direction:column;}
+.portal-brand {padding:28px 3.7vw 12px;color:#fff;}
+.portal-brand-logo {display:grid;place-items:center;width:68px;height:68px;}
+.portal-brand-logo img {width:52px;height:52px;}
+.portal-brand-copy {border-left:2px solid #e9f4ff;padding-left:16px;}
+.portal-brand-title {font-size:23px;font-weight:800;letter-spacing:-.025em;}
+.portal-brand-subtitle {margin-top:4px;font-size:15px;color:#c8def7;}
+.portal-layout {flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,34%);gap:28px;align-items:center;padding:24px 5vw 52px 3.7vw;}
+.portal-intro {position:absolute;top:68%;left:8%;width:40%;text-align:center;color:white;}
+.portal-intro p {font-size:clamp(15px,1.5vw,24px);font-weight:600;line-height:1.5;white-space:nowrap;}
+.portal-rule {display:block;width:42px;height:3px;background:#16bcd3;margin:12px auto 10px;}
+.portal-intro .portal-rule {width:42%;height:2px;background:#19cbe6;margin:14px auto;}
+.portal-card {grid-column:2;width:100%;min-width:0;max-width:420px;justify-self:end;padding:24px 28px 28px;border:1px solid #ffffffa6;border-radius:24px;background:#f6f8fce6;backdrop-filter:blur(10px);box-shadow:0 12px 32px #16376626;}
+.portal-card-heading {text-align:center;}
+.portal-card-kicker {font-size:12px;font-weight:600;letter-spacing:.05em;}
+.portal-card-heading h2 {margin-top:8px;font-size:27px;line-height:1.16;font-weight:650;letter-spacing:-.025em;}
+.portal-card-heading>p:last-child {color:#455c8c;font-size:14px;line-height:1.4;}
+.portal-card form {margin-top:20px;}
+.portal-card form label {color:#0a2263;}
+.portal-card form input {height:44px;background:#eef2f980;color:#09205e;border-color:#d4dfef;border-radius:12px;box-shadow:none;}
+.portal-card form input::placeholder {color:#5d729d;}
+.portal-card form svg {color:#38558c;}
+.portal-card form button[type=submit] {height:46px;margin-top:6px;border-radius:12px;background:#081f68;font-size:15px;font-weight:600;box-shadow:0 7px 14px #08246925;}
+.portal-card form button[type=submit]:hover {background:#123780;}
+.portal-card form button[type=submit] svg {color:white;}
+.portal-form-options {display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;}
+@media(min-width:1700px){.portal-layout{padding-top:32px;padding-bottom:68px;}}
+@media(max-width:1023px){.portal-brand{padding:24px 26px 12px;}.portal-layout{grid-template-columns:minmax(0,1fr) minmax(320px,44%);padding:24px 26px 48px;gap:20px;}.portal-card{padding:24px;}.portal-brand-title{font-size:21px;}.portal-brand-subtitle{font-size:13px;}}
+@media(max-width:900px){.portal-layout{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;gap:24px;}.portal-intro{left:3%;top:70%;width:42%;}.portal-intro p{white-space:normal;font-size:17px;}.portal-card{max-width:380px;}}
+@media(max-width:700px){.portal-login{background-position:45% center;}.portal-brand{padding:22px 18px 12px;background:linear-gradient(#082b60ed,#123c6890);}.portal-brand-logo{width:48px;height:48px;flex-shrink:0;}.portal-brand-logo img{width:38px;height:38px;}.portal-brand-copy{padding-left:12px;}.portal-brand-title{font-size:20px;}.portal-brand-subtitle{max-width:230px;font-size:11px;}.portal-layout{align-items:center;padding:18px 16px 32px;gap:20px;}.portal-intro{position:static;order:1;width:100%;max-width:400px;padding:10px;background:#082b60e6;border-radius:14px;}.portal-intro p{font-size:14px;white-space:normal;}.portal-intro .portal-rule{margin:4px auto 10px;}.portal-card{max-width:400px;padding:22px 20px;border-radius:22px;}.portal-card-heading h2{font-size:25px;}.portal-form-options{flex-wrap:wrap;}}

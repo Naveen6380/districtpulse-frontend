@@ -11,6 +11,10 @@ it("forwards tunnel-origin auth requests to the configured backend without expos
         "X-Forwarded-Host": "phone.example",
         Authorization: "Bearer test-only",
         Cookie: "tunnel=test-only",
+        "cdn-loop": "cloudflare; loops=1",
+        "cf-connecting-ip": "192.0.2.1",
+        "sec-fetch-site": "same-origin",
+        "x-district-id": "chennai",
       },
     }),
     "http://127.0.0.1:8091",
@@ -22,6 +26,10 @@ it("forwards tunnel-origin auth requests to the configured backend without expos
   expect(headers.get("authorization")).toBe("Bearer test-only");
   expect(headers.has("cookie")).toBe(false);
   expect(headers.has("origin")).toBe(false);
+  expect(headers.has("cdn-loop")).toBe(false);
+  expect(headers.has("cf-connecting-ip")).toBe(false);
+  expect(headers.has("sec-fetch-site")).toBe(false);
+  expect(headers.get("x-district-id")).toBe("chennai");
 });
 it("does not proxy a cross-origin request", async () => {
   const send = vi.fn();
